@@ -2,6 +2,10 @@
 
 一个用于处理Base64编码data文件的工具，支持内容查找替换并生成解码副本。
 
+## 感谢
+
+- [批量修改文章和其他地方的图片链接](hhttps://github.com/orgs/halo-dev/discussions/6465)
+
 ## 准备
 
 - 备份文件
