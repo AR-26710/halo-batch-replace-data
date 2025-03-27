@@ -302,7 +302,7 @@ class ModernGUI(TkinterDnD.Tk):
     def _select_file(self):
         """选择输入文件"""
         self.file_path = filedialog.askopenfilename(
-            filetypes=[("JSON文件", "*.json"), ("所有文件", "*.*")]
+            filetypes=[("所有文件", "*.*")]
         )
         if self.file_path:
             self._update_ui(f"已选择文件: {os.path.basename(self.file_path)}")
