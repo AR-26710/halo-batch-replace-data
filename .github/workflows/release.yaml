@@ -1,0 +1,59 @@
+name: Release GUI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.env'
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check changes
+      id: check_changes
+      shell: pwsh
+      run: |
+        $versionChanged = $false
+        $currentVersion = (Select-String -Path .env -Pattern '^VITE_VERSION=(.*)').Matches.Groups[1].Value
+        try {
+          git show HEAD~1:.env > .env.old
+          $oldVersion = (Select-String -Path .env.old -Pattern '^VITE_VERSION=(.*)').Matches.Groups[1].Value
+          $versionChanged = ($currentVersion -ne $oldVersion)
+        } catch {
+          $versionChanged = $true
+        }
+        
+        $shouldRelease = $versionChanged
+        "should_release=$shouldRelease" >> $env:GITHUB_OUTPUT
+        "version=$currentVersion" >> $env:GITHUB_OUTPUT
+        
+    - name: Create Release
+      if: steps.check_changes.outputs.should_release == 'true'
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: ${{ steps.check_changes.outputs.version }}
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      if: steps.check_changes.outputs.should_release == 'true'
+      id: upload_asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/gui.exe
+        asset_name: gui.exe
+        asset_content_type: application/octet-stream
