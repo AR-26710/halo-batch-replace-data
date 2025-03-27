@@ -4,7 +4,7 @@
 
 ## 感谢
 
-- [批量修改文章和其他地方的图片链接](hhttps://github.com/orgs/halo-dev/discussions/6465)
+[批量修改文章和其他地方的图片链接](https://github.com/orgs/halo-dev/discussions/6465)
 
 ## 准备
 
