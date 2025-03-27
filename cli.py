@@ -34,12 +34,12 @@ def main():
     )
     parser.add_argument(
         '-s', '--search',
-        required=True,
-        help='搜索内容(正则表达式)'
+        default='',
+        help='搜索内容(正则表达式)，默认为空字符串'
     )
     parser.add_argument(
         '-r', '--replace',
-        required=True,
+        default='',
         help='替换内容'
     )
 
