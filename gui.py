@@ -326,9 +326,6 @@ class ModernGUI(TkinterDnD.Tk):
             return
 
         search_str = self.search_entry.get()
-        if not search_str:
-            self.show_error("搜索内容不能为空")
-            return
 
         output_dir = self.output_path.get() or os.path.dirname(self.file_path)
         output_name = f"processed_{os.path.basename(self.file_path)}"

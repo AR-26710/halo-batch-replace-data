@@ -10,7 +10,7 @@ class DataProcessor:
     """数据处理核心类"""
 
     @staticmethod
-    def process_file(input_path: str, output_path: str, search: str, replace: str) -> str:
+    def process_file(input_path: str, output_path: str, search: str = "", replace: str = "") -> str:
         """处理文件主方法
         返回: 解码文件的路径
         """
