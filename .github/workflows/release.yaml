@@ -23,9 +23,15 @@ jobs:
         $versionChanged = $false
         $currentVersion = (Select-String -Path .env -Pattern '^VITE_VERSION=(.*)').Matches.Groups[1].Value
         try {
-          git show HEAD~1:.env > .env.old
-          $oldVersion = (Select-String -Path .env.old -Pattern '^VITE_VERSION=(.*)').Matches.Groups[1].Value
-          $versionChanged = ($currentVersion -ne $oldVersion)
+          # Check if this is the first commit
+          $commitCount = (git rev-list --count HEAD)
+          if ($commitCount -gt 1) {
+            git show HEAD~1:.env > .env.old
+            $oldVersion = (Select-String -Path .env.old -Pattern '^VITE_VERSION=(.*)').Matches.Groups[1].Value
+            $versionChanged = ($currentVersion -ne $oldVersion)
+          } else {
+            $versionChanged = $true
+          }
         } catch {
           $versionChanged = $true
         }
