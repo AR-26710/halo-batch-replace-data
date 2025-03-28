@@ -42,20 +42,33 @@ def main():
         default='',
         help='替换内容'
     )
+    parser.add_argument(
+        '--reencode',
+        help='重新加密解码副本文件路径'
+    )
 
     args = parser.parse_args()
 
     try:
-        logging.info(f"开始处理文件: {args.input}")
-        decoded_path = DataProcessor.process_file(
-            args.input,
-            args.output,
-            args.search,
-            args.replace
-        )
-        logging.info(f"处理完成!")
-        logging.info(f"输出文件: {args.output}")
-        logging.info(f"解码副本: {decoded_path}")
+        if args.reencode:
+            logging.info(f"开始重新加密文件: {args.reencode}")
+            output_path = DataProcessor.reencode_file(
+                args.reencode,
+                args.output
+            )
+            logging.info(f"重新加密完成!")
+            logging.info(f"输出文件: {output_path}")
+        else:
+            logging.info(f"开始处理文件: {args.input}")
+            decoded_path = DataProcessor.process_file(
+                args.input,
+                args.output,
+                args.search,
+                args.replace
+            )
+            logging.info(f"处理完成!")
+            logging.info(f"输出文件: {args.output}")
+            logging.info(f"解码副本: {decoded_path}")
     except Exception as e:
         logging.error(f"处理失败: {str(e)}", exc_info=True)
         raise

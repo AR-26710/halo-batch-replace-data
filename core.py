@@ -63,6 +63,40 @@ class DataProcessor:
             return item
 
     @staticmethod
+    def encode_item(item: Dict) -> Dict:
+        """编码单个条目"""
+        if "data" not in item:
+            return item
+
+        try:
+            encoded = base64.b64encode(item["data"].encode('utf-8')).decode()
+            return {**item, "data": encoded}
+        except Exception as e:
+            item_id = item.get("id", "未知")
+            logging.warning(f"条目 {item_id} 编码失败 - {str(e)}")
+            return item
+
+    @staticmethod
+    def reencode_file(input_path: str, output_path: str) -> str:
+        """重新加密解码副本"""
+        try:
+            with open(input_path, 'r', encoding='utf-8') as f:
+                decoded_data = json.load(f)
+
+            encoded_data = []
+            for item in decoded_data:
+                encoded_data.append(DataProcessor.encode_item(item))
+
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(encoded_data, f, ensure_ascii=False, indent=2)
+
+            return output_path
+
+        except Exception as e:
+            logging.error(f"重新加密失败: {str(e)}", exc_info=True)
+            raise
+
+    @staticmethod
     def replace_content(data: List[Dict], search: str, replace: str) -> List[Dict]:
         """执行内容替换"""
         try:

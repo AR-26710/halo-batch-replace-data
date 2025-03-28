@@ -193,6 +193,14 @@ class ModernGUI(TkinterDnD.Tk):
             style="Accent.TButton"
         ).pack(side=tk.LEFT, padx=10, ipadx=10)
 
+        self.reencode_btn = ttk.Button(
+            output_frame,
+            text="🔒 重新加密",
+            command=self.start_reencoding,
+            style="Accent.TButton"
+        )
+        self.reencode_btn.pack(side=tk.LEFT, padx=10, ipadx=10)
+
     def _create_progress_bar(self):
         """创建现代化进度条"""
         progress_frame = ttk.Frame(self)
@@ -332,11 +340,33 @@ class ModernGUI(TkinterDnD.Tk):
         output_path = os.path.join(output_dir, output_name)
 
         self.process_btn.config(state=tk.DISABLED)
+        self.reencode_btn.config(state=tk.DISABLED)
         self.log_message("开始处理文件...", "info")
 
         self.process_thread = threading.Thread(
             target=self._run_processing,
             args=(self.file_path, output_path, search_str, self.replace_entry.get()),
+            daemon=True
+        )
+        self.process_thread.start()
+
+    def start_reencoding(self):
+        """启动重新加密流程"""
+        if not hasattr(self, 'file_path') or not self.file_path:
+            self.show_error("请先选择解码副本文件")
+            return
+
+        output_dir = self.output_path.get() or os.path.dirname(self.file_path)
+        output_name = f"reencoded_{os.path.basename(self.file_path)}"
+        output_path = os.path.join(output_dir, output_name)
+
+        self.process_btn.config(state=tk.DISABLED)
+        self.reencode_btn.config(state=tk.DISABLED)
+        self.log_message("开始重新加密文件...", "info")
+
+        self.process_thread = threading.Thread(
+            target=self._run_reencoding,
+            args=(self.file_path, output_path),
             daemon=True
         )
         self.process_thread.start()
@@ -356,6 +386,25 @@ class ModernGUI(TkinterDnD.Tk):
             ))
         finally:
             self.process_btn.config(state=tk.NORMAL)
+            self.reencode_btn.config(state=tk.NORMAL)
+            self.progress["value"] = 100
+
+    def _run_reencoding(self, input_path: str, output_path: str):
+        """执行重新加密过程"""
+        try:
+            reencoded_path = DataProcessor.reencode_file(input_path, output_path)
+            self.message_queue.put((
+                f"重新加密完成！\n输出文件: {reencoded_path}",
+                "info"
+            ))
+        except Exception as e:
+            self.message_queue.put((
+                f"重新加密失败: {str(e)}",
+                "error"
+            ))
+        finally:
+            self.process_btn.config(state=tk.NORMAL)
+            self.reencode_btn.config(state=tk.NORMAL)
             self.progress["value"] = 100
 
     def show_error(self, message: str):
