@@ -159,8 +159,12 @@ class ModernGUI(TkinterDnD.Tk):
         output_frame = ttk.LabelFrame(control_frame, text="输出设置", padding=10)
         output_frame.grid(row=0, column=1, padx=10, pady=5, sticky=tk.E)
 
+        # 第一行：输出路径选择
+        path_row = ttk.Frame(output_frame)
+        path_row.pack(fill=tk.X, pady=5)
+
         output_btn = ttk.Button(
-            output_frame,
+            path_row,
             text="📁 选择输出目录",
             command=self._select_output_dir,
             style="Accent.TButton"
@@ -169,7 +173,7 @@ class ModernGUI(TkinterDnD.Tk):
 
         self.output_path = tk.StringVar()
         path_label = ttk.Label(
-            output_frame,
+            path_row,
             textvariable=self.output_path,
             font=("Segoe UI", 9),
             foreground="#6c757d",
@@ -177,29 +181,32 @@ class ModernGUI(TkinterDnD.Tk):
         )
         path_label.pack(side=tk.LEFT, padx=5)
 
-        # 操作按钮
+        # 第二行：操作按钮
+        btn_row = ttk.Frame(output_frame)
+        btn_row.pack(fill=tk.X, pady=5)
+
         self.process_btn = ttk.Button(
-            output_frame,
-            text="▶ 开始处理",
+            btn_row,
+            text="▶ 开始解密",
             command=self.start_processing,
             style="Success.TButton"
         )
-        self.process_btn.pack(side=tk.LEFT, padx=10, ipadx=10)
+        self.process_btn.pack(side=tk.LEFT, padx=5, ipadx=5)
 
         ttk.Button(
-            output_frame,
+            btn_row,
             text="📂 选择文件",
             command=self._select_file,
             style="Accent.TButton"
-        ).pack(side=tk.LEFT, padx=10, ipadx=10)
+        ).pack(side=tk.LEFT, padx=5, ipadx=5)
 
         self.reencode_btn = ttk.Button(
-            output_frame,
+            btn_row,
             text="🔒 重新加密",
             command=self.start_reencoding,
             style="Accent.TButton"
         )
-        self.reencode_btn.pack(side=tk.LEFT, padx=10, ipadx=10)
+        self.reencode_btn.pack(side=tk.LEFT, padx=5, ipadx=5)
 
     def _create_progress_bar(self):
         """创建现代化进度条"""
