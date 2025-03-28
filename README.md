@@ -28,10 +28,11 @@
 ## 功能特性
 
 - 拖放文件或手动选择文件
-- 支持正则表达式查找替换（测试），仅支持多对一替换
+- 支持正则表达式查找替换（已稳定支持）
 - 自动生成原始文件的解码副本
 - 实时处理日志显示
-- 支持cli功能
+- 支持CLI命令行和GUI图形界面两种操作方式
+- 支持Base64编码/解码操作
 
 ## 使用方法
 
@@ -48,7 +49,11 @@ python cli.py -i 输入文件 -o 输出文件 -s "搜索内容" -r "替换内容
 
 示例:
 ```bash
+# 简单文本替换
 python cli.py -i data.json -o processed_data.json -s "test" -r "TEST"
+
+# 正则表达式替换
+python cli.py -i data.json -o processed_data.json -s "https?:\\/\\/[^\\s]+" -r "https://new-domain.com"
 ```
 
 ### GUI界面使用
@@ -69,6 +74,14 @@ python cli.py -i data.json -o processed_data.json -s "test" -r "TEST"
   ```
   pip install tkinterdnd2
   ```
+
+## 开发说明
+
+- 核心功能在core.py中实现
+- CLI接口在cli.py中实现
+- GUI界面在gui.py中实现
+- 使用base64模块进行编码解码操作
+- 使用json模块处理数据文件
 
 ## 启动方式
 
