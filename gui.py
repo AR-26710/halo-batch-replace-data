@@ -9,7 +9,7 @@ from tkinterdnd2 import TkinterDnD, DND_FILES
 
 from core import DataProcessor
 
-# 配置日志系统
+# 配置日志系统，设置日志格式和级别
 logging.basicConfig(
     format='[%(levelname)s] %(message)s',
     level=logging.INFO,
@@ -17,11 +17,11 @@ logging.basicConfig(
 )
 
 
-
 class ModernGUI(TkinterDnD.Tk):
-    """现代化GUI界面"""
+    """GUI界面，继承自TkinterDnD.Tk，支持拖拽功能"""
 
     def __init__(self):
+        """初始化GUI界面，设置窗口标题、大小、样式，并初始化UI组件"""
         super().__init__()
         self.title("halo数据批量替换器")
         self.geometry("1000x700")
@@ -33,7 +33,7 @@ class ModernGUI(TkinterDnD.Tk):
         self.after(100, self.process_messages)
 
     def _setup_style(self):
-        """配置现代化界面样式"""
+        """配置界面样式，包括颜色、字体、按钮、进度条等组件的样式"""
         self.style.theme_use("clam")
 
         # 主色调配置
@@ -88,7 +88,7 @@ class ModernGUI(TkinterDnD.Tk):
                              padding=5)
 
     def _init_ui(self):
-        """初始化界面组件"""
+        """初始化界面组件，包括公告区域、拖拽区域、控制面板、进度条和日志面板"""
         self._create_announcement_panel()
         self._create_drop_zone()
         self._create_control_panel()
@@ -96,7 +96,7 @@ class ModernGUI(TkinterDnD.Tk):
         self._create_log_panel()
 
     def _create_announcement_panel(self):
-        """创建公告区域"""
+        """创建公告区域，显示提示信息"""
         announcement_frame = ttk.LabelFrame(
             self,
             text="公告",
@@ -115,7 +115,7 @@ class ModernGUI(TkinterDnD.Tk):
         ).pack(pady=5)
 
     def _create_drop_zone(self):
-        """创建现代化拖拽区域"""
+        """创建拖拽区域，支持文件拖拽功能"""
         drop_frame = ttk.LabelFrame(self, text="拖拽文件到这里", padding=20)
         drop_frame.pack(pady=20, padx=20, fill=tk.BOTH, expand=True)
 
@@ -139,7 +139,7 @@ class ModernGUI(TkinterDnD.Tk):
         drop_frame.dnd_bind('<<Drop>>', self._on_file_drop)
 
     def _create_control_panel(self):
-        """创建现代化控制面板"""
+        """创建控制面板，包括输入参数、输出路径选择和操作按钮"""
         control_frame = ttk.Frame(self, padding=10)
         control_frame.pack(fill=tk.X, padx=20, pady=15)
 
@@ -209,7 +209,7 @@ class ModernGUI(TkinterDnD.Tk):
         self.reencode_btn.pack(side=tk.LEFT, padx=5, ipadx=5)
 
     def _create_progress_bar(self):
-        """创建现代化进度条"""
+        """创建进度条，用于显示处理进度"""
         progress_frame = ttk.Frame(self)
         progress_frame.pack(fill=tk.X, padx=20, pady=15)
 
@@ -229,7 +229,7 @@ class ModernGUI(TkinterDnD.Tk):
         self.progress.pack(side=tk.LEFT, expand=True, fill=tk.X)
 
     def _create_log_panel(self):
-        """创建现代化日志面板"""
+        """创建日志面板，用于显示处理日志"""
         log_frame = ttk.LabelFrame(self, text="处理日志", padding=10)
         log_frame.pack(padx=20, pady=15, fill=tk.BOTH, expand=True)
 
@@ -279,7 +279,7 @@ class ModernGUI(TkinterDnD.Tk):
         self.log_text.pack(fill=tk.BOTH, expand=True)
 
     def log_message(self, message: str, level: str = "info"):
-        """记录日志信息"""
+        """记录日志信息，支持不同级别的日志显示不同颜色"""
         color_map = {
             "info": "black",
             "warning": "orange",
@@ -298,7 +298,7 @@ class ModernGUI(TkinterDnD.Tk):
         self.log_text.configure(state=tk.DISABLED)
 
     def process_messages(self):
-        """处理消息队列"""
+        """处理消息队列，将队列中的消息显示在日志面板中"""
         while not self.message_queue.empty():
             try:
                 msg, level = self.message_queue.get_nowait()
@@ -308,14 +308,14 @@ class ModernGUI(TkinterDnD.Tk):
         self.after(100, self.process_messages)
 
     def _on_file_drop(self, event):
-        """处理文件拖放事件"""
+        """处理文件拖放事件，获取拖拽的文件路径"""
         files = [f.strip("{}") for f in self.tk.splitlist(event.data)]
         if files:
             self.file_path = files[0]
             self._update_ui(f"已选择文件: {os.path.basename(self.file_path)}")
 
     def _select_file(self):
-        """选择输入文件"""
+        """选择输入文件，通过文件对话框获取文件路径"""
         self.file_path = filedialog.askopenfilename(
             filetypes=[("所有文件", "*.*")]
         )
@@ -323,19 +323,19 @@ class ModernGUI(TkinterDnD.Tk):
             self._update_ui(f"已选择文件: {os.path.basename(self.file_path)}")
 
     def _select_output_dir(self):
-        """选择输出目录"""
+        """选择输出目录，通过文件对话框获取目录路径"""
         directory = filedialog.askdirectory()
         if directory:
             self.output_path.set(directory)
             self.log_message(f"输出目录设置为: {directory}")
 
     def _update_ui(self, message: str):
-        """更新界面状态"""
+        """更新界面状态，显示当前选择的文件路径并重置进度条"""
         self.drop_label.config(text=message)
         self.progress["value"] = 0
 
     def start_processing(self):
-        """启动处理流程"""
+        """启动处理流程，检查输入文件是否存在，并启动处理线程"""
         if not hasattr(self, 'file_path') or not self.file_path:
             self.show_error("请先选择输入文件")
             return
@@ -358,7 +358,7 @@ class ModernGUI(TkinterDnD.Tk):
         self.process_thread.start()
 
     def start_reencoding(self):
-        """启动重新加密流程"""
+        """启动重新加密流程，检查输入文件是否存在，并启动重新加密线程"""
         if not hasattr(self, 'file_path') or not self.file_path:
             self.show_error("请先选择解码副本文件")
             return
@@ -379,7 +379,7 @@ class ModernGUI(TkinterDnD.Tk):
         self.process_thread.start()
 
     def _run_processing(self, input_path: str, output_path: str, search: str, replace: str):
-        """执行处理过程"""
+        """执行处理过程，调用DataProcessor处理文件，并更新日志和进度条"""
         try:
             decoded_path = DataProcessor.process_file(input_path, output_path, search, replace)
             self.message_queue.put((
@@ -397,7 +397,7 @@ class ModernGUI(TkinterDnD.Tk):
             self.progress["value"] = 100
 
     def _run_reencoding(self, input_path: str, output_path: str):
-        """执行重新加密过程"""
+        """执行重新加密过程，调用DataProcessor重新加密文件，并更新日志和进度条"""
         try:
             reencoded_path = DataProcessor.reencode_file(input_path, output_path)
             self.message_queue.put((
@@ -415,7 +415,7 @@ class ModernGUI(TkinterDnD.Tk):
             self.progress["value"] = 100
 
     def show_error(self, message: str):
-        """显示错误提示"""
+        """显示错误提示，弹出错误对话框并记录错误日志"""
         messagebox.showerror("错误", message)
         self.log_message(f"错误: {message}", "error")
 
