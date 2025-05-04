@@ -67,6 +67,10 @@ python cli.py -i data.json -o processed_data.json -s "https?:\\/\\/[^\\s]+" -r "
 - `processed_原文件名.data` - 处理后的文件
 - `原文件名-original-decoded.json` - 原始文件的解码副本
 
+### 使用示例视频
+
+[![使用示例视频]](./images/2025-05-04%2011-22-27.mp4)
+
 ## 运行要求
 
 - Python 3.6+
