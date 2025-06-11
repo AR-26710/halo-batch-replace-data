@@ -206,6 +206,15 @@ class ModernGUI(TkinterDnD.Tk):
         )
         self.replace_btn.pack(side=tk.LEFT, padx=5)
 
+        self.reencode_btn = ttk.Button(
+            output_frame,
+            text="🔒 加密",
+            command=self.start_reencoding,
+            style="Accent.TButton",
+            width=8
+        )
+        self.reencode_btn.pack(side=tk.LEFT, padx=5)
+
         self.save_btn = ttk.Button(
             output_frame,
             text="💾 保存",
@@ -215,15 +224,6 @@ class ModernGUI(TkinterDnD.Tk):
             state=tk.DISABLED
         )
         self.save_btn.pack(side=tk.LEFT, padx=5)
-
-        self.reencode_btn = ttk.Button(
-            output_frame,
-            text="🔒 加密",
-            command=self.start_reencoding,
-            style="Accent.TButton",
-            width=8
-        )
-        self.reencode_btn.pack(side=tk.LEFT, padx=5)
 
     def _create_progress_bar(self):
         """创建进度条，用于显示处理进度"""
@@ -468,8 +468,8 @@ class ModernGUI(TkinterDnD.Tk):
 
     def save_processed_data(self):
         """保存处理后的数据到文件"""
-        if not hasattr(self, 'processed_data') or not self.processed_data:
-            self.show_error("没有可保存的数据，请先解码文件")
+        if not hasattr(self, 'processed_data') and not hasattr(self, 'reencoded_data'):
+            self.show_error("没有可保存的数据，请先解码或加密文件")
             return
 
         output_dir = self.output_path.get() or os.path.dirname(self.file_path)
@@ -477,14 +477,24 @@ class ModernGUI(TkinterDnD.Tk):
         output_path = os.path.join(output_dir, output_name)
 
         try:
-            with open(output_path, 'w', encoding='utf-8') as f:
-                json.dump(self.processed_data, f, ensure_ascii=False, indent=2)
-
-            decoded_path = DataProcessor.save_decoded_copy(self.original_data, output_path)
-            self.message_queue.put((
-                f"保存成功！\n输出文件: {output_path}\n解码副本: {decoded_path}",
-                "info"
-            ))
+            if hasattr(self, 'reencoded_data'):
+                # 保存加密数据
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    json.dump(self.reencoded_data, f, ensure_ascii=False, indent=2)
+                self.message_queue.put((
+                    f"加密数据保存成功！\n输出文件: {output_path}",
+                    "info"
+                ))
+            else:
+                # 保存处理后的数据
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    json.dump(self.processed_data, f, ensure_ascii=False, indent=2)
+                decoded_path = DataProcessor.save_decoded_copy(self.original_data, output_path)
+                self.message_queue.put((
+                    f"保存成功！\n输出文件: {output_path}\n解码副本: {decoded_path}",
+                    "info"
+                ))
+            
             self.save_btn.config(state=tk.DISABLED)
         except Exception as e:
             self.message_queue.put((
@@ -493,16 +503,17 @@ class ModernGUI(TkinterDnD.Tk):
             ))
 
     def _run_reencoding(self, input_path: str, output_path: str):
-        """执行重新加密过程，调用DataProcessor重新加密文件，并更新日志和进度条"""
+        """执行重新加密过程，调用DataProcessor重新加密数据但不保存"""
         try:
-            reencoded_path = DataProcessor.reencode_file(input_path, output_path)
+            self.reencoded_data = DataProcessor.reencode_data(input_path)
             self.message_queue.put((
-                f"重新加密完成！\n输出文件: {reencoded_path}",
+                "加密完成！请点击保存按钮保存结果",
                 "info"
             ))
+            self.save_btn.config(state=tk.NORMAL)
         except Exception as e:
             self.message_queue.put((
-                f"重新加密失败: {str(e)}",
+                f"加密失败: {str(e)}",
                 "error"
             ))
         finally:

@@ -180,6 +180,33 @@ class DataProcessor:
             raise
 
     @staticmethod
+    def reencode_data(input_path: str) -> list:
+        """重新加密数据但不保存
+
+        Args:
+            input_path (str): 输入文件路径
+
+        Returns:
+            list: 加密后的数据列表
+
+        Raises:
+            Exception: 如果重新加密过程中发生错误，记录日志并抛出异常
+        """
+        try:
+            with open(input_path, 'r', encoding='utf-8') as f:
+                decoded_data = json.load(f)
+
+            encoded_data = []
+            for item in decoded_data:
+                encoded_data.append(DataProcessor.encode_item(item))
+
+            return encoded_data
+
+        except Exception as e:
+            logging.error(f"重新加密失败: {str(e)}", exc_info=True)
+            raise
+
+    @staticmethod
     def replace_content(data: List[Dict], search: str, replace: str) -> List[Dict]:
         """在数据列表中执行内容替换
 
