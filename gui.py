@@ -191,11 +191,20 @@ class ModernGUI(TkinterDnD.Tk):
         self.process_btn = ttk.Button(
             output_frame,
             text="▶ 解码",
-            command=self.start_processing,
+            command=self.start_decoding,
             style="Success.TButton",
             width=8
         )
         self.process_btn.pack(side=tk.LEFT, padx=5)
+
+        self.replace_btn = ttk.Button(
+            output_frame,
+            text="🔍 替换",
+            command=self.start_replacing,
+            style="Accent.TButton",
+            width=8
+        )
+        self.replace_btn.pack(side=tk.LEFT, padx=5)
 
         self.save_btn = ttk.Button(
             output_frame,
@@ -342,25 +351,53 @@ class ModernGUI(TkinterDnD.Tk):
         self.drop_label.config(text=message)
         self.progress["value"] = 0
 
-    def start_processing(self):
-        """启动处理流程，检查输入文件是否存在，并启动处理线程"""
+    def start_decoding(self):
+        """启动解码流程，检查输入文件是否存在，并启动解码线程"""
+        if not hasattr(self, 'file_path') or not self.file_path:
+            self.show_error("请先选择输入文件")
+            return
+
+        output_dir = self.output_path.get() or os.path.dirname(self.file_path)
+        output_name = f"decoded_{os.path.basename(self.file_path)}"
+        output_path = os.path.join(output_dir, output_name)
+
+        self.process_btn.config(state=tk.DISABLED)
+        self.replace_btn.config(state=tk.DISABLED)
+        self.reencode_btn.config(state=tk.DISABLED)
+        self.log_message("开始解码文件...", "info")
+
+        self.process_thread = threading.Thread(
+            target=self._run_decoding,
+            args=(self.file_path, output_path),
+            daemon=True
+        )
+        self.process_thread.start()
+
+    def start_replacing(self):
+        """启动替换流程，检查输入文件是否存在，并启动替换线程"""
         if not hasattr(self, 'file_path') or not self.file_path:
             self.show_error("请先选择输入文件")
             return
 
         search_str = self.search_entry.get()
+        replace_str = self.replace_entry.get()
+
+        if not search_str:
+            self.show_error("请输入搜索内容")
+            return
 
         output_dir = self.output_path.get() or os.path.dirname(self.file_path)
-        output_name = f"processed_{os.path.basename(self.file_path)}"
+        output_name = f"replaced_{os.path.basename(self.file_path)}"
         output_path = os.path.join(output_dir, output_name)
 
         self.process_btn.config(state=tk.DISABLED)
+        self.replace_btn.config(state=tk.DISABLED)
         self.reencode_btn.config(state=tk.DISABLED)
-        self.log_message("开始处理文件...", "info")
+        self.log_message("开始替换文件内容...", "info")
 
         self.process_thread = threading.Thread(
-            target=self._run_processing,
-            args=(self.file_path, output_path, search_str, self.replace_entry.get()),
+            target=self._run_replacing,
+            args=(self.file_path, output_path, search_str, replace_str),
             daemon=True
         )
         self.process_thread.start()
@@ -388,22 +425,44 @@ class ModernGUI(TkinterDnD.Tk):
         )
         self.process_thread.start()
 
-    def _run_processing(self, input_path: str, output_path: str, search: str, replace: str):
-        """执行处理过程，调用DataProcessor解码和替换文件内容，但不保存"""
+    def _run_decoding(self, input_path: str, output_path: str):
+        """执行解码过程，调用DataProcessor解码文件内容"""
         try:
-            self.original_data, self.processed_data = DataProcessor.decode_and_replace(input_path, search, replace)
+            self.original_data = DataProcessor.decode_file(input_path)
+            self.processed_data = self.original_data
             self.message_queue.put((
-                "解码和替换完成！请点击保存按钮保存结果",
+                "解码完成！请点击保存按钮保存结果",
                 "info"
             ))
             self.save_btn.config(state=tk.NORMAL)
         except Exception as e:
             self.message_queue.put((
-                f"处理失败: {str(e)}",
+                f"解码失败: {str(e)}",
                 "error"
             ))
         finally:
             self.process_btn.config(state=tk.NORMAL)
+            self.replace_btn.config(state=tk.NORMAL)
+            self.reencode_btn.config(state=tk.NORMAL)
+            self.progress["value"] = 100
+
+    def _run_replacing(self, input_path: str, output_path: str, search: str, replace: str):
+        """执行替换过程，调用DataProcessor替换文件内容"""
+        try:
+            self.original_data, self.processed_data = DataProcessor.replace_content_in_file(input_path, search, replace)
+            self.message_queue.put((
+                "替换完成！请点击保存按钮保存结果",
+                "info"
+            ))
+            self.save_btn.config(state=tk.NORMAL)
+        except Exception as e:
+            self.message_queue.put((
+                f"替换失败: {str(e)}",
+                "error"
+            ))
+        finally:
+            self.process_btn.config(state=tk.NORMAL)
+            self.replace_btn.config(state=tk.NORMAL)
             self.reencode_btn.config(state=tk.NORMAL)
             self.progress["value"] = 100
 

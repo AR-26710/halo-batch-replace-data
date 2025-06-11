@@ -10,13 +10,35 @@ class DataProcessor:
     """数据处理核心类，提供文件处理、解码、编码、内容替换等功能"""
 
     @staticmethod
-    def decode_and_replace(input_path: str, search: str = "", replace: str = "") -> tuple:
-        """解码并替换文件内容但不保存
+    def decode_file(input_path: str) -> List[Dict]:
+        """解码文件内容但不保存
 
         Args:
             input_path (str): 输入文件路径
-            search (str, optional): 要搜索的正则表达式，默认为空字符串
-            replace (str, optional): 替换的字符串，默认为空字符串
+
+        Returns:
+            List[Dict]: 解码后的数据
+
+        Raises:
+            Exception: 如果处理过程中发生错误，记录日志并抛出异常
+        """
+        try:
+            with open(input_path, 'r', encoding='utf-8') as f:
+                original_data = json.load(f)
+            return original_data
+
+        except Exception as e:
+            logging.error(f"解码失败: {str(e)}", exc_info=True)
+            raise
+
+    @staticmethod
+    def replace_content_in_file(input_path: str, search: str, replace: str) -> tuple:
+        """替换文件内容但不保存
+
+        Args:
+            input_path (str): 输入文件路径
+            search (str): 要搜索的正则表达式
+            replace (str): 替换的字符串
 
         Returns:
             tuple: (原始数据, 处理后的数据)
@@ -32,7 +54,7 @@ class DataProcessor:
             return original_data, processed_data
 
         except Exception as e:
-            logging.error(f"处理失败: {str(e)}", exc_info=True)
+            logging.error(f"替换失败: {str(e)}", exc_info=True)
             raise
 
     @staticmethod
@@ -51,7 +73,8 @@ class DataProcessor:
         Raises:
             Exception: 如果处理过程中发生错误，记录日志并抛出异常
         """
-        original_data, processed_data = DataProcessor.decode_and_replace(input_path, search, replace)
+        original_data = DataProcessor.decode_file(input_path)
+        processed_data = DataProcessor.replace_content(original_data, search, replace)
         decoded_path = DataProcessor.save_decoded_copy(original_data, output_path)
 
         with open(output_path, 'w', encoding='utf-8') as f:
