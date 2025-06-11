@@ -364,7 +364,9 @@ class ModernGUI(TkinterDnD.Tk):
             return
 
         output_dir = self.output_path.get() or os.path.dirname(self.file_path)
-        output_name = f"reencoded_{os.path.basename(self.file_path)}"
+        # 获取原始文件名（不带后缀）并添加固定.data后缀
+        base_name = os.path.splitext(os.path.basename(self.file_path))[0]
+        output_name = f"reencoded_{base_name}.data"
         output_path = os.path.join(output_dir, output_name)
 
         self.process_btn.config(state=tk.DISABLED)
