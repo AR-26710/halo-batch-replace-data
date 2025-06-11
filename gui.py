@@ -187,7 +187,7 @@ class ModernGUI(TkinterDnD.Tk):
 
         self.process_btn = ttk.Button(
             btn_row,
-            text="▶ 开始解密",
+            text="▶ 开始解码",
             command=self.start_processing,
             style="Success.TButton"
         )
