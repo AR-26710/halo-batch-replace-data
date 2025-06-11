@@ -10,6 +10,32 @@ class DataProcessor:
     """数据处理核心类，提供文件处理、解码、编码、内容替换等功能"""
 
     @staticmethod
+    def decode_and_replace(input_path: str, search: str = "", replace: str = "") -> tuple:
+        """解码并替换文件内容但不保存
+
+        Args:
+            input_path (str): 输入文件路径
+            search (str, optional): 要搜索的正则表达式，默认为空字符串
+            replace (str, optional): 替换的字符串，默认为空字符串
+
+        Returns:
+            tuple: (原始数据, 处理后的数据)
+
+        Raises:
+            Exception: 如果处理过程中发生错误，记录日志并抛出异常
+        """
+        try:
+            with open(input_path, 'r', encoding='utf-8') as f:
+                original_data = json.load(f)
+
+            processed_data = DataProcessor.replace_content(original_data, search, replace)
+            return original_data, processed_data
+
+        except Exception as e:
+            logging.error(f"处理失败: {str(e)}", exc_info=True)
+            raise
+
+    @staticmethod
     def process_file(input_path: str, output_path: str, search: str = "", replace: str = "") -> str:
         """处理文件主方法，读取输入文件，解码并替换内容后保存到输出文件
 
@@ -25,21 +51,13 @@ class DataProcessor:
         Raises:
             Exception: 如果处理过程中发生错误，记录日志并抛出异常
         """
-        try:
-            with open(input_path, 'r', encoding='utf-8') as f:
-                original_data = json.load(f)
+        original_data, processed_data = DataProcessor.decode_and_replace(input_path, search, replace)
+        decoded_path = DataProcessor.save_decoded_copy(original_data, output_path)
 
-            decoded_path = DataProcessor.save_decoded_copy(original_data, output_path)
-            processed_data = DataProcessor.replace_content(original_data, search, replace)
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(processed_data, f, ensure_ascii=False, indent=2)
 
-            with open(output_path, 'w', encoding='utf-8') as f:
-                json.dump(processed_data, f, ensure_ascii=False, indent=2)
-
-            return decoded_path
-
-        except Exception as e:
-            logging.error(f"处理失败: {str(e)}", exc_info=True)
-            raise
+        return decoded_path
 
     @staticmethod
     def save_decoded_copy(data: List[Dict], output_path: str) -> str:

@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import queue
@@ -116,8 +117,24 @@ class ModernGUI(TkinterDnD.Tk):
 
     def _create_drop_zone(self):
         """创建拖拽区域，支持文件拖拽和点击选择文件功能"""
-        drop_frame = ttk.LabelFrame(self, text="选择文件区域", padding=10)
-        drop_frame.pack(pady=20, padx=20, fill=tk.BOTH, expand=True)
+        # 主容器框架
+        container = ttk.Frame(self)
+        container.pack(pady=20, padx=20, fill=tk.BOTH, expand=True)
+
+        # 标题标签
+        title_label = ttk.Label(
+            container,
+            text="选择文件区域",
+            font=("Segoe UI", 10, "bold")
+        )
+        title_label.pack(anchor=tk.NW)
+
+        # 拖拽区域框架
+        drop_frame = tk.Frame(container, bg="#f8f9fa", bd=2, relief=tk.GROOVE)
+        # 注册拖拽功能到主窗口
+        self.drop_target_register(DND_FILES)
+        self.dnd_bind('<<Drop>>', self._on_file_drop)
+        drop_frame.pack(fill=tk.BOTH, expand=True, pady=(5, 0))
 
         # 添加图标和更醒目的拖拽区域
         self.drop_label = ttk.Label(
@@ -127,16 +144,14 @@ class ModernGUI(TkinterDnD.Tk):
             wraplength=400,
             anchor=tk.CENTER,
             foreground="#495057",
-            justify=tk.CENTER
+            justify=tk.CENTER,
+            background="#f8f9fa"
         )
         self.drop_label.pack(expand=True, fill=tk.BOTH, padx=30, pady=50)
 
         # 绑定点击事件来选择文件
         self.drop_label.bind("<Button-1>", lambda e: self._select_file())
         drop_frame.bind("<Button-1>", lambda e: self._select_file())
-
-        drop_frame.drop_target_register(DND_FILES)
-        drop_frame.dnd_bind('<<Drop>>', self._on_file_drop)
 
     def _create_control_panel(self):
         """创建控制面板，包括输入参数和输出设置"""
@@ -181,6 +196,16 @@ class ModernGUI(TkinterDnD.Tk):
             width=8
         )
         self.process_btn.pack(side=tk.LEFT, padx=5)
+
+        self.save_btn = ttk.Button(
+            output_frame,
+            text="💾 保存",
+            command=self.save_processed_data,
+            style="Accent.TButton",
+            width=8,
+            state=tk.DISABLED
+        )
+        self.save_btn.pack(side=tk.LEFT, padx=5)
 
         self.reencode_btn = ttk.Button(
             output_frame,
@@ -364,13 +389,14 @@ class ModernGUI(TkinterDnD.Tk):
         self.process_thread.start()
 
     def _run_processing(self, input_path: str, output_path: str, search: str, replace: str):
-        """执行处理过程，调用DataProcessor处理文件，并更新日志和进度条"""
+        """执行处理过程，调用DataProcessor解码和替换文件内容，但不保存"""
         try:
-            decoded_path = DataProcessor.process_file(input_path, output_path, search, replace)
+            self.original_data, self.processed_data = DataProcessor.decode_and_replace(input_path, search, replace)
             self.message_queue.put((
-                f"处理完成！\n输出文件: {output_path}\n解码副本: {decoded_path}",
+                "解码和替换完成！请点击保存按钮保存结果",
                 "info"
             ))
+            self.save_btn.config(state=tk.NORMAL)
         except Exception as e:
             self.message_queue.put((
                 f"处理失败: {str(e)}",
@@ -380,6 +406,32 @@ class ModernGUI(TkinterDnD.Tk):
             self.process_btn.config(state=tk.NORMAL)
             self.reencode_btn.config(state=tk.NORMAL)
             self.progress["value"] = 100
+
+    def save_processed_data(self):
+        """保存处理后的数据到文件"""
+        if not hasattr(self, 'processed_data') or not self.processed_data:
+            self.show_error("没有可保存的数据，请先解码文件")
+            return
+
+        output_dir = self.output_path.get() or os.path.dirname(self.file_path)
+        output_name = f"processed_{os.path.basename(self.file_path)}"
+        output_path = os.path.join(output_dir, output_name)
+
+        try:
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(self.processed_data, f, ensure_ascii=False, indent=2)
+
+            decoded_path = DataProcessor.save_decoded_copy(self.original_data, output_path)
+            self.message_queue.put((
+                f"保存成功！\n输出文件: {output_path}\n解码副本: {decoded_path}",
+                "info"
+            ))
+            self.save_btn.config(state=tk.DISABLED)
+        except Exception as e:
+            self.message_queue.put((
+                f"保存失败: {str(e)}",
+                "error"
+            ))
 
     def _run_reencoding(self, input_path: str, output_path: str):
         """执行重新加密过程，调用DataProcessor重新加密文件，并更新日志和进度条"""
