@@ -115,14 +115,14 @@ class ModernGUI(TkinterDnD.Tk):
         ).pack(pady=5)
 
     def _create_drop_zone(self):
-        """创建拖拽区域，支持文件拖拽功能"""
-        drop_frame = ttk.LabelFrame(self, text="拖拽文件到这里", padding=20)
+        """创建拖拽区域，支持文件拖拽和点击选择文件功能"""
+        drop_frame = ttk.LabelFrame(self, padding=20)
         drop_frame.pack(pady=20, padx=20, fill=tk.BOTH, expand=True)
 
         # 添加图标和更醒目的拖拽区域
         self.drop_label = ttk.Label(
             drop_frame,
-            text="📁 拖拽文件到此处区域\n或点击下方按钮选择文件",
+            text="📁 拖拽文件到此处区域\n或点击此处选择文件",
             font=("Segoe UI", 12),
             wraplength=400,
             anchor=tk.CENTER,
@@ -130,6 +130,10 @@ class ModernGUI(TkinterDnD.Tk):
             justify=tk.CENTER
         )
         self.drop_label.pack(expand=True, fill=tk.BOTH, padx=30, pady=50)
+
+        # 绑定点击事件来选择文件
+        self.drop_label.bind("<Button-1>", lambda e: self._select_file())
+        drop_frame.bind("<Button-1>", lambda e: self._select_file())
 
         # 添加边框效果
         drop_frame.bind("<Enter>", lambda e: drop_frame.config(style="Hover.TFrame"))
@@ -139,7 +143,7 @@ class ModernGUI(TkinterDnD.Tk):
         drop_frame.dnd_bind('<<Drop>>', self._on_file_drop)
 
     def _create_control_panel(self):
-        """创建控制面板，包括输入参数、输出路径选择和操作按钮"""
+        """创建控制面板，包括输入参数和输出设置"""
         control_frame = ttk.Frame(self, padding=10)
         control_frame.pack(fill=tk.X, padx=20, pady=15)
 
@@ -155,58 +159,41 @@ class ModernGUI(TkinterDnD.Tk):
         self.replace_entry = ttk.Entry(input_frame, width=45, font=("Segoe UI", 10))
         self.replace_entry.grid(row=1, column=1, padx=10, pady=3)
 
-        # 输出路径选择
+        # 输出设置区域（单行布局）
         output_frame = ttk.LabelFrame(control_frame, text="输出设置", padding=10)
         output_frame.grid(row=0, column=1, padx=10, pady=5, sticky=tk.E)
 
-        # 第一行：输出路径选择
-        path_row = ttk.Frame(output_frame)
-        path_row.pack(fill=tk.X, pady=5)
-
+        # 输出目录选择按钮
         output_btn = ttk.Button(
-            path_row,
-            text="📁 选择输出目录",
+            output_frame,
+            text="📁 输出目录",
             command=self._select_output_dir,
-            style="Accent.TButton"
+            style="Accent.TButton",
+            width=12
         )
         output_btn.pack(side=tk.LEFT, padx=5)
 
+        # 输出路径显示
         self.output_path = tk.StringVar()
-        path_label = ttk.Label(
-            path_row,
-            textvariable=self.output_path,
-            font=("Segoe UI", 9),
-            foreground="#6c757d",
-            wraplength=200
-        )
-        path_label.pack(side=tk.LEFT, padx=5)
 
-        # 第二行：操作按钮
-        btn_row = ttk.Frame(output_frame)
-        btn_row.pack(fill=tk.X, pady=5)
-
+        # 操作按钮
         self.process_btn = ttk.Button(
-            btn_row,
-            text="▶ 开始解码",
+            output_frame,
+            text="▶ 解码",
             command=self.start_processing,
-            style="Success.TButton"
+            style="Success.TButton",
+            width=8
         )
-        self.process_btn.pack(side=tk.LEFT, padx=5, ipadx=5)
-
-        ttk.Button(
-            btn_row,
-            text="📂 选择文件",
-            command=self._select_file,
-            style="Accent.TButton"
-        ).pack(side=tk.LEFT, padx=5, ipadx=5)
+        self.process_btn.pack(side=tk.LEFT, padx=5)
 
         self.reencode_btn = ttk.Button(
-            btn_row,
-            text="🔒 重新加密",
+            output_frame,
+            text="🔒 加密",
             command=self.start_reencoding,
-            style="Accent.TButton"
+            style="Accent.TButton",
+            width=8
         )
-        self.reencode_btn.pack(side=tk.LEFT, padx=5, ipadx=5)
+        self.reencode_btn.pack(side=tk.LEFT, padx=5)
 
     def _create_progress_bar(self):
         """创建进度条，用于显示处理进度"""
