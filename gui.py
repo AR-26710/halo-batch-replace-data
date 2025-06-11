@@ -24,7 +24,7 @@ class ModernGUI(TkinterDnD.Tk):
         """初始化GUI界面，设置窗口标题、大小、样式，并初始化UI组件"""
         super().__init__()
         self.title("halo数据批量替换器")
-        self.geometry("1000x700")
+        self.geometry("1000x800")
         self.style = ttk.Style(self)
         self._setup_style()
         self._init_ui()
