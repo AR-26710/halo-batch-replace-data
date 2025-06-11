@@ -304,7 +304,7 @@ class ModernGUI(TkinterDnD.Tk):
     def _select_file(self):
         """选择输入文件，通过文件对话框获取文件路径"""
         self.file_path = filedialog.askopenfilename(
-            filetypes=[("所有文件", "*.*")]
+            filetypes=[("Data和JSON文件", "*.data *.json"), ("所有文件", "*.*")]
         )
         if self.file_path:
             self._update_ui(f"已选择文件: {os.path.basename(self.file_path)}")
