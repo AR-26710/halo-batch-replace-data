@@ -116,7 +116,7 @@ class ModernGUI(TkinterDnD.Tk):
 
     def _create_drop_zone(self):
         """创建拖拽区域，支持文件拖拽和点击选择文件功能"""
-        drop_frame = ttk.LabelFrame(self, padding=20)
+        drop_frame = ttk.LabelFrame(self, text="选择文件区域", padding=10)
         drop_frame.pack(pady=20, padx=20, fill=tk.BOTH, expand=True)
 
         # 添加图标和更醒目的拖拽区域
@@ -134,10 +134,6 @@ class ModernGUI(TkinterDnD.Tk):
         # 绑定点击事件来选择文件
         self.drop_label.bind("<Button-1>", lambda e: self._select_file())
         drop_frame.bind("<Button-1>", lambda e: self._select_file())
-
-        # 添加边框效果
-        drop_frame.bind("<Enter>", lambda e: drop_frame.config(style="Hover.TFrame"))
-        drop_frame.bind("<Leave>", lambda e: drop_frame.config(style="TFrame"))
 
         drop_frame.drop_target_register(DND_FILES)
         drop_frame.dnd_bind('<<Drop>>', self._on_file_drop)
