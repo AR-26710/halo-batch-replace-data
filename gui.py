@@ -369,18 +369,18 @@ class ModernGUI(TkinterDnD.Tk):
     def _run_reencoding(self, input_path: str, output_path: str):
         try:
             self.reencoded_data = DataProcessor.reencode_data(input_path)
-            self.message_queue.put(("加密完成！请点击保存按钮保存结果", "info"))
+            self.message_queue.put(("编码完成！请点击保存按钮保存结果", "info"))
             self.save_btn.config(state=tk.NORMAL)
         except ValueError as e:
             if "编码功能只支持JSON文件" in str(e):
                 self.message_queue.put(("编码功能只对.json文件生效", "error"))
                 self.show_error("编码功能只对.json文件生效")
             else:
-                self.message_queue.put((f"加密失败: {str(e)}", "error"))
-                self.show_error(f"加密失败: {str(e)}")
+                self.message_queue.put((f"编码失败: {str(e)}", "error"))
+                self.show_error(f"编码失败: {str(e)}")
         except Exception as e:
-            self.message_queue.put((f"加密失败: {str(e)}", "error"))
-            self.show_error(f"加密失败: {str(e)}")
+            self.message_queue.put((f"编码失败: {str(e)}", "error"))
+            self.show_error(f"编码失败: {str(e)}")
         finally:
             self._enable_buttons(reencode_only=True)
 
