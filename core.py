@@ -86,7 +86,7 @@ class DataProcessor:
 
     @staticmethod
     def reencode_file(input_path: str, output_path: str) -> str:
-        """重新加密解码后的文件"""
+        """重新编码解码后的文件"""
         if not input_path.lower().endswith('.json'):
             raise ValueError("编码功能只支持JSON文件")
         decoded_data = DataProcessor._load_json(input_path)
@@ -96,7 +96,7 @@ class DataProcessor:
 
     @staticmethod
     def reencode_data(input_path: str) -> List[Dict[str, Any]]:
-        """重新加密数据但不保存"""
+        """重新编码数据但不保存"""
         if not input_path.lower().endswith('.json'):
             raise ValueError("编码功能只支持JSON文件")
         decoded_data = DataProcessor._load_json(input_path)
