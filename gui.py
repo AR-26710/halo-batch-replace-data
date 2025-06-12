@@ -149,7 +149,7 @@ class ModernGUI(TkinterDnD.Tk):
         self.replace_btn.pack(side=tk.LEFT, padx=5)
 
         self.reencode_btn = ttk.Button(
-            output_frame, text="🔒 加密",
+            output_frame, text="🔒 编码",
             command=self.start_reencoding, style="Accent.TButton", width=8
         )
         self.reencode_btn.pack(side=tk.LEFT, padx=5)
