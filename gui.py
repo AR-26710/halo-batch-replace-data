@@ -314,7 +314,7 @@ class ModernGUI(TkinterDnD.Tk):
         output_name = f"reencoded_{base_name}.data"
         output_path = os.path.join(output_dir, output_name)
         self._disable_buttons(reencode_only=True)
-        self.log_message("开始重新加密文件...", "info")
+        self.log_message("开始重新编码文件...", "info")
         self.process_thread = threading.Thread(
             target=self._run_reencoding, args=(self.file_path, output_path), daemon=True
         )
@@ -322,7 +322,7 @@ class ModernGUI(TkinterDnD.Tk):
 
     def save_processed_data(self):
         if not (self.processed_data or self.reencoded_data):
-            self.show_error("没有可保存的数据，请先解码或加密文件")
+            self.show_error("没有可保存的数据，请先解码或编码文件")
             return
         output_dir = self.output_path.get() or os.path.dirname(self.file_path)
         output_name = f"processed_{os.path.basename(self.file_path)}"
@@ -331,7 +331,7 @@ class ModernGUI(TkinterDnD.Tk):
             if self.reencoded_data:
                 with open(output_path, 'w', encoding='utf-8') as f:
                     json.dump(self.reencoded_data, f, ensure_ascii=False, indent=2)
-                self.message_queue.put((f"加密数据保存成功！\n输出文件: {output_path}", "info"))
+                self.message_queue.put((f"编码数据保存成功！\n输出文件: {output_path}", "info"))
             else:
                 with open(output_path, 'w', encoding='utf-8') as f:
                     json.dump(self.processed_data, f, ensure_ascii=False, indent=2)
@@ -371,8 +371,16 @@ class ModernGUI(TkinterDnD.Tk):
             self.reencoded_data = DataProcessor.reencode_data(input_path)
             self.message_queue.put(("加密完成！请点击保存按钮保存结果", "info"))
             self.save_btn.config(state=tk.NORMAL)
+        except ValueError as e:
+            if "编码功能只支持JSON文件" in str(e):
+                self.message_queue.put(("编码功能只对.json文件生效", "error"))
+                self.show_error("编码功能只对.json文件生效")
+            else:
+                self.message_queue.put((f"加密失败: {str(e)}", "error"))
+                self.show_error(f"加密失败: {str(e)}")
         except Exception as e:
             self.message_queue.put((f"加密失败: {str(e)}", "error"))
+            self.show_error(f"加密失败: {str(e)}")
         finally:
             self._enable_buttons(reencode_only=True)
 
