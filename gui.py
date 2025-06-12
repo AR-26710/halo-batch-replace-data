@@ -329,9 +329,11 @@ class ModernGUI(TkinterDnD.Tk):
         output_path = os.path.join(output_dir, output_name)
         try:
             if self.reencoded_data:
-                with open(output_path, 'w', encoding='utf-8') as f:
+                base_path, _ = os.path.splitext(output_path)
+                data_path = f"{base_path}.data"
+                with open(data_path, 'w', encoding='utf-8') as f:
                     json.dump(self.reencoded_data, f, ensure_ascii=False, indent=2)
-                self.message_queue.put((f"编码数据保存成功！\n输出文件: {output_path}", "info"))
+                self.message_queue.put((f"编码数据保存成功！\n输出文件: {data_path}", "info"))
             else:
                 with open(output_path, 'w', encoding='utf-8') as f:
                     json.dump(self.processed_data, f, ensure_ascii=False, indent=2)

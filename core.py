@@ -5,6 +5,7 @@ import os
 import re
 from typing import List, Dict, Any, Pattern, Callable
 
+
 class DataProcessor:
     """数据处理核心类，提供文件处理、解码、编码、内容替换等功能"""
 
@@ -91,8 +92,10 @@ class DataProcessor:
             raise ValueError("编码功能只支持JSON文件")
         decoded_data = DataProcessor._load_json(input_path)
         encoded_data = [DataProcessor.encode_item(item) for item in decoded_data]
-        DataProcessor._save_json(encoded_data, output_path)
-        return output_path
+        base_path, _ = os.path.splitext(output_path)
+        data_path = f"{base_path}.data"
+        DataProcessor._save_json(encoded_data, data_path)
+        return data_path
 
     @staticmethod
     def reencode_data(input_path: str) -> List[Dict[str, Any]]:
