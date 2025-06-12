@@ -243,9 +243,32 @@ class ModernGUI(TkinterDnD.Tk):
         self.progress["value"] = 0
 
     # ====== 主业务流程入口 ======
+    def _check_unsaved_data(self) -> bool:
+        """检查是否有未保存的数据，返回True表示可以继续操作"""
+        if not (self.processed_data or self.reencoded_data):
+            return True
+            
+        answer = messagebox.askyesnocancel(
+            "未保存的数据",
+            "检测到未保存的前任务数据，是否保存？\n"
+            "点击'是'保存，'否'清空数据，'取消'中止操作"
+        )
+        
+        if answer is None:  # 用户点击取消
+            return False
+        elif answer:  # 用户点击是
+            self.save_processed_data()
+        else:  # 用户点击否
+            self.processed_data = None
+            self.reencoded_data = None
+            self.save_btn.config(state=tk.DISABLED)
+        return True
+
     def start_decoding(self):
         if not self.file_path:
             self.show_error("请先选择输入文件")
+            return
+        if not self._check_unsaved_data():
             return
         output_dir = self.output_path.get() or os.path.dirname(self.file_path)
         output_name = f"decoded_{os.path.basename(self.file_path)}"
@@ -260,6 +283,8 @@ class ModernGUI(TkinterDnD.Tk):
     def start_replacing(self):
         if not self.file_path:
             self.show_error("请先选择输入文件")
+            return
+        if not self._check_unsaved_data():
             return
         search_str = self.search_entry.get()
         replace_str = self.replace_entry.get()
@@ -281,6 +306,8 @@ class ModernGUI(TkinterDnD.Tk):
     def start_reencoding(self):
         if not self.file_path:
             self.show_error("请先选择解码副本文件")
+            return
+        if not self._check_unsaved_data():
             return
         output_dir = self.output_path.get() or os.path.dirname(self.file_path)
         base_name = os.path.splitext(os.path.basename(self.file_path))[0]
@@ -308,8 +335,11 @@ class ModernGUI(TkinterDnD.Tk):
             else:
                 with open(output_path, 'w', encoding='utf-8') as f:
                     json.dump(self.processed_data, f, ensure_ascii=False, indent=2)
-                decoded_path = DataProcessor.save_decoded_copy(self.original_data, output_path)
-                self.message_queue.put((f"保存成功！\n输出文件: {output_path}\n解码副本: {decoded_path}", "info"))
+                if self.original_data:
+                    decoded_path = DataProcessor.save_decoded_copy(self.original_data, output_path)
+                    self.message_queue.put((f"保存成功！\n输出文件: {output_path}\n解码副本: {decoded_path}", "info"))
+                else:
+                    self.message_queue.put((f"保存成功！\n输出文件: {output_path}", "info"))
             self.save_btn.config(state=tk.DISABLED)
         except Exception as e:
             self.message_queue.put((f"保存失败: {str(e)}", "error"))
