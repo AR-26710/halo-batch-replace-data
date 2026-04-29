@@ -1,0 +1,2 @@
+from modules.domain.repositories.i_extension_repository import IExtensionRepository, SearchResult
+from modules.domain.repositories.i_storage_repository import IStorageRepository

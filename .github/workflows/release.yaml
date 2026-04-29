@@ -1,0 +1,80 @@
+name: Release GUI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.env'
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check_changes.outputs.should_release }}
+      version: ${{ steps.check_changes.outputs.version }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+
+    - name: Check version change
+      id: check_changes
+      shell: bash
+      run: |
+        version_changed=false
+        current_version=$(grep '^VITE_VERSION=' .env | cut -d'=' -f2)
+        commit_count=$(git rev-list --count HEAD)
+        if [ "$commit_count" -gt 1 ]; then
+          old_version=$(git show HEAD~1:.env | grep '^VITE_VERSION=' | cut -d'=' -f2 || echo "")
+          if [ "$current_version" != "$old_version" ]; then
+            version_changed=true
+          fi
+        else
+          version_changed=true
+        fi
+        echo "should_release=$version_changed" >> $GITHUB_OUTPUT
+        echo "version=$current_version" >> $GITHUB_OUTPUT
+
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.should_release == 'true'
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: gui.exe
+            asset_name: gui-windows.exe
+          - os: macos-latest
+            artifact_name: gui
+            asset_name: gui-macos
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: pip install customtkinter tkinterdnd2 pyinstaller
+
+    - name: Build with PyInstaller
+      run: pyinstaller --onefile --name gui gui.py
+
+    - name: Rename artifact for platform
+      shell: bash
+      run: |
+        mv dist/${{ matrix.artifact_name }} dist/${{ matrix.asset_name }}
+
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ needs.prepare.outputs.version }}
+        name: ${{ needs.prepare.outputs.version }}
+        files: dist/${{ matrix.asset_name }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
