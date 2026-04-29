@@ -1,69 +1,54 @@
 name: Release GUI
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.env'
+  release:
+    types: [published]
 
 jobs:
-  prepare:
-    runs-on: ubuntu-latest
-    outputs:
-      should_release: ${{ steps.check_changes.outputs.should_release }}
-      version: ${{ steps.check_changes.outputs.version }}
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 2
-
-    - name: Check version change
-      id: check_changes
-      shell: bash
-      run: |
-        version_changed=false
-        current_version=$(grep '^VITE_VERSION=' .env | cut -d'=' -f2)
-        commit_count=$(git rev-list --count HEAD)
-        if [ "$commit_count" -gt 1 ]; then
-          old_version=$(git show HEAD~1:.env | grep '^VITE_VERSION=' | cut -d'=' -f2 || echo "")
-          if [ "$current_version" != "$old_version" ]; then
-            version_changed=true
-          fi
-        else
-          version_changed=true
-        fi
-        echo "should_release=$version_changed" >> $GITHUB_OUTPUT
-        echo "version=$current_version" >> $GITHUB_OUTPUT
-
   build:
-    needs: prepare
-    if: needs.prepare.outputs.should_release == 'true'
     strategy:
       matrix:
         include:
           - os: windows-latest
             artifact_name: gui.exe
-            asset_name: gui-windows.exe
+            asset_name: gui-windows-${{ github.event.release.tag_name }}.exe
+            noconsole: false
+          - os: windows-latest
+            artifact_name: gui-noconsole.exe
+            asset_name: gui-windows-noconsole-${{ github.event.release.tag_name }}.exe
+            noconsole: true
           - os: macos-latest
             artifact_name: gui
-            asset_name: gui-macos
+            asset_name: gui-macos-${{ github.event.release.tag_name }}
+            noconsole: false
+          - os: macos-latest
+            artifact_name: gui-noconsole
+            asset_name: gui-macos-noconsole-${{ github.event.release.tag_name }}
+            noconsole: true
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
     - uses: actions/checkout@v4
 
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
+        cache: 'pip'
 
     - name: Install dependencies
-      run: pip install customtkinter tkinterdnd2 pyinstaller
+      run: pip install -r requirements.txt
 
-    - name: Build with PyInstaller
+    - name: Build with PyInstaller (console)
+      if: matrix.noconsole == false
       run: pyinstaller --onefile --name gui gui.py
+
+    - name: Build with PyInstaller (noconsole)
+      if: matrix.noconsole == true
+      run: pyinstaller --onefile --noconsole --name gui-noconsole gui.py
 
     - name: Rename artifact for platform
       shell: bash
@@ -73,8 +58,8 @@ jobs:
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ needs.prepare.outputs.version }}
-        name: ${{ needs.prepare.outputs.version }}
+        tag_name: ${{ github.event.release.tag_name }}
+        name: ${{ github.event.release.name }}
         files: dist/${{ matrix.asset_name }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
